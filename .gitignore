@@ -1,0 +1,25 @@
+# Virtual Environment (webgis)
+webgis/Include/
+webgis/Lib/
+webgis/Scripts/
+webgis/pyvenv.cfg
+webgis/.gitignore
+
+# Python cache & bytecode
+__pycache__/
+*.py[cod]
+*$py.class
+
+# Django local database & logs
+*.sqlite3
+db.sqlite3
+*.log
+
+# Environment variables & IDE
+.env
+.venv/
+venv/
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db

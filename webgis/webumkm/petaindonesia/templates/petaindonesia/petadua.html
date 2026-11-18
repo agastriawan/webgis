@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peta Jabodetabek: Jakarta, Bogor, Depok, Tangerang, Bekasi</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="">
+    <style>
+        body { margin: 0; font-family: system-ui, sans-serif; }
+        header { padding: 10px 16px; background: #1f4e79; color: #fff; }
+        header h1 { margin: 0; font-size: 18px; }
+        #map { height: calc(100vh - 42px); width: 100%; }
+        .city-panel {
+            background: #fff;
+            padding: 10px 12px;
+            border-radius: 6px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+            min-width: 140px;
+        }
+        .city-panel h4 {
+            margin: 0 0 8px 0;
+            font-size: 13px;
+            color: #1f4e79;
+        }
+        .city-panel button {
+            display: block;
+            width: 100%;
+            margin-bottom: 5px;
+            padding: 5px 8px;
+            border: 1px solid #d0d7de;
+            border-radius: 4px;
+            background: #f6f8fa;
+            cursor: pointer;
+            text-align: left;
+            font-size: 12px;
+        }
+        .city-panel button:hover {
+            background: #e8eef5;
+            border-color: #1f4e79;
+        }
+        .city-panel button.all-btn {
+            margin-top: 6px;
+            margin-bottom: 0;
+            background: #1f4e79;
+            color: #fff;
+            border-color: #1f4e79;
+            text-align: center;
+            font-weight: 600;
+        }
+        .city-panel button.all-btn:hover {
+            background: #163a5a;
+        }
+    </style>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+</head>
+<body>
+    <header><h1>Peta Jabodetabek: Jakarta, Bogor, Depok, Tangerang, Bekasi</h1></header>
+    <div id="map"></div>
+
+    <script>
+        const cities = [
+            { name: "Jakarta", coords: [-6.2088, 106.8456], info: "Ibu kota negara Indonesia" },
+            { name: "Bogor", coords: [-6.5971, 106.8060], info: "Kota Hujan, Jawa Barat" },
+            { name: "Depok", coords: [-6.4025, 106.7942], info: "Kota Pendidikan & Penyangga, Jawa Barat" },
+            { name: "Tangerang", coords: [-6.1783, 106.6319], info: "Kota Industri & Bandara Soekarno-Hatta, Banten" },
+            { name: "Bekasi", coords: [-6.2383, 106.9756], info: "Kota Patriot, Jawa Barat" }
+        ];
+
+        const map = L.map("map");
+
+        const osm = L.tileLayer("https://tile.openstreetmap.org/{z}/{x}/{y}.png", {
+            maxZoom: 19,
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+
+        const satelit = L.tileLayer(
+            "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}",
+            { maxZoom: 19, attribution: "Tiles &copy; Esri" }
+        );
+
+        const markersGroup = L.featureGroup().addTo(map);
+        const cityMarkers = {};
+
+        cities.forEach((city) => {
+            const marker = L.marker(city.coords)
+                .bindTooltip(city.name, { permanent: true, direction: "right", offset: [6, -12] })
+                .bindPopup(`<b>${city.name}</b><br>${city.info}<br>Koordinat: ${city.coords[0]}, ${city.coords[1]}`)
+                .addTo(markersGroup);
+            cityMarkers[city.name] = marker;
+        });
+
+        function fitAllCities() {
+            map.fitBounds(markersGroup.getBounds(), { padding: [50, 50] });
+        }
+        fitAllCities();
+
+        L.control.layers(
+            { "OpenStreetMap": osm, "Citra Satelit": satelit },
+            { "Kota Jabodetabek": markersGroup }
+        ).addTo(map);
+
+        L.control.scale({ imperial: false }).addTo(map);
+
+        const cityControl = L.control({ position: "topright" });
+        cityControl.onAdd = function () {
+            const div = L.DomUtil.create("div", "city-panel");
+            div.innerHTML = "<h4>Pilih kota</h4>";
+            L.DomEvent.disableClickPropagation(div);
+
+            cities.forEach((city) => {
+                const btn = document.createElement("button");
+                btn.textContent = city.name;
+                btn.addEventListener("click", () => {
+                    map.flyTo(city.coords, 12, { duration: 0.8 });
+                    cityMarkers[city.name].openPopup();
+                });
+                div.appendChild(btn);
+            });
+
+            const allBtn = document.createElement("button");
+            allBtn.textContent = "Tampilkan semua";
+            allBtn.className = "all-btn";
+            allBtn.addEventListener("click", () => {
+                map.closePopup();
+                fitAllCities();
+            });
+            div.appendChild(allBtn);
+
+            return div;
+        };
+        cityControl.addTo(map);
+    </script>
+</body>
+</html>
